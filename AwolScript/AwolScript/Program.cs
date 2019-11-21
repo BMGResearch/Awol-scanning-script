@@ -14,10 +14,10 @@ namespace AwolScript
     class Program
     {
         //Test Connection String
-       // public static string connectionString = "data source = 192.100.50.14; initial catalog = CC_Data_WMS_LIVE; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
+        public static string connectionString = "data source = 192.100.50.14; initial catalog = CC_Data_WMS_LIVE; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
 
         //Live Connection String
-        public static string connectionString = "data source = BMG-DBEXT01\\BMG_PROD_EXT; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
+       // public static string connectionString = "data source = BMG-DBEXT01\\BMG_PROD_EXT; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
 
         static void Main(string[] args)
         {
@@ -27,6 +27,7 @@ namespace AwolScript
                 //to work but they have a schedule. Than agency will get notyfication and also internal stuff, user will be marked as awol.
 
                 List<CC_Scheduling> AwolInterviewers = new List<CC_Scheduling>();
+
 
                 //will scan everyone who not come in to work but have a schedule it will run check For all shift.
                 AwolInterviewers = GetAwolInterviewers();
@@ -42,7 +43,6 @@ namespace AwolScript
             }
             catch (Exception e)
             {
-
                 Helper.SendEmail("mateusz.stacel@bmgresearch.co.uk, Mokbul.Miah@bmgresearch.co.uk", "Awol error", $" {e.ToString()} ");
             }
 
@@ -61,7 +61,6 @@ namespace AwolScript
             SendEmailWithReportAwol(data);
         }
 
-
         //Agency emails are disabled for testing time only internal peoples will get email.
         private static void SendEmailWithReportAwol(List<CC_Scheduling> data)
         {
@@ -70,7 +69,13 @@ namespace AwolScript
 
             foreach (CC_Scheduling item in data)
             {
-                CC_InterviewerList currentInterviewer = db.CC_InterviewerList.Where(x => x.IntNameID == item.Interviewer).FirstOrDefault();
+
+                CC_InterviewerList currentInterviewer = new CC_InterviewerList();
+
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    currentInterviewer = connection.Query<CC_InterviewerList>(@"SELECT * from CC_InterviewerList where IntNameID = @Interviewer", new { Interviewer = item.Interviewer }).FirstOrDefault();
+                }
 
                 string employedBy = currentInterviewer.EmployedBy;
 
@@ -81,7 +86,12 @@ namespace AwolScript
                     //  List<string> sendToEmails = db.CC_AgencyDetails.Where(x => x.AgencyName.ToLower().Trim() == employedBy).Select(x => x.AgencyAMEmail).ToList();
                     string teamLeaderEmail = "";
 
-                    teamLeaderEmail = db.CC_ManagerTeamLink.Where(x => x.Managers == currentInterviewer.TEAM).Select(x => x.Email).FirstOrDefault();
+                    using (var connection = new SqlConnection(connectionString))
+                    {
+                        CC_ManagerTeamLink interviewerManager = connection.Query<CC_ManagerTeamLink>(@"SELECT * from CC_ManagerTeamLink where Managers = @InterviewerManager", new { InterviewerManager = currentInterviewer.TEAM }).FirstOrDefault();
+                        teamLeaderEmail = interviewerManager.Email;
+                    }
+
 
                     if (string.IsNullOrWhiteSpace(teamLeaderEmail))
                     {
@@ -104,14 +114,25 @@ namespace AwolScript
                     ////Append team leaders and manager for notyfications
                     //agencyEmails += $", {temLeaderEmail}";
 
-                    string PayId = db.CC_AgencyDetails.Where(x => x.AgencyName.ToLower().Trim() == employedBy).Select(x => x.PayID).FirstOrDefault();
+                    string PayId = "";
 
-                    if(PayId == null)
+                    using (var connection = new SqlConnection(connectionString))
+                    {
+                        CC_AgencyDetails payId = connection.Query<CC_AgencyDetails>("SELECT * from CC_AgencyDetails where AgencyName = @EmployedBy", new { EmployedBy = "Next" }).FirstOrDefault();
+                        PayId = payId.PayID;
+                    }
+
+                    if (PayId == null)
                     {
                         PayId = "BMG-";
                     }
 
-                    int totalAwol = db.CC_SchedulingSickLate.SqlQuery($"SELECT *, [Shift-Start] as ShiftStart, [Shift-End] as ShiftEnd FROM CC_SchedulingSickLate where status = 'awol' and Interviewer = '{item.Interviewer}' and Date >= DATEADD(MONTH, -3, GETDATE())").ToList().Count;
+                    int totalAwol;
+
+                    using (var connection = new SqlConnection(connectionString))
+                    {
+                        totalAwol = connection.Query<CC_Scheduling>(@"SELECT *, [Shift-Start] as ShiftStart, [Shift-End] as ShiftEnd FROM CC_SchedulingSickLate where status = 'awol' and Interviewer = @Interviewer and Date >= DATEADD(MONTH, -3, GETDATE())", new { Interviewer = item.Interviewer }).ToList().Count;
+                    }
 
                     string subject = $"{PayId} B - AWOL({totalAwol}) - {currentInterviewer.IntNameID}";
                     string body = $"Awol notyfication for {currentInterviewer.IntNameID}, shift start: {item.ShiftStart.ToLongTimeString()} / shift end: {item.ShiftEnd.ToLongTimeString()}";
@@ -126,11 +147,13 @@ namespace AwolScript
         private static void CreateNewAwolEntryInCCSchedulingSickLate(List<CC_Scheduling> data)
         {
 
-            string query = "";
+  
             foreach (CC_Scheduling item in data)
             {
-
-                 query += $@"INSERT INTO cc_schedulingsicklate 
+          
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    connection.Execute($@"INSERT INTO cc_schedulingsicklate 
                                                     (interviewer,
                                                      [date],
                                                      [shift-start],
@@ -144,24 +167,20 @@ namespace AwolScript
                                                      mansign,
                                                      approve,
                                                      [deny])
-                                        VALUES('{item.Interviewer}',
-                                                     '{DateTime.Today}',
-                                                     '{item.ShiftStart}',
-                                                     '{item.ShiftEnd}',
+                                        VALUES('@Interviewer',
+                                                     @Date,
+                                                     @ShiftStart,
+                                                     @ShiftEnd,
                                                      'AWOL',
-                                                     {item.TotalHours},
+                                                     @TotalHours,
                                                      'Automated AWOL',
-                                                     '{item.Team}',
-                                                     '{DateTime.Now}',
+                                                     '@Team',
+                                                     @DateNow,
                                                      0,
                                                      0,
                                                      0,
-                                                     0);";
-            }
-
-            using (var connection = new SqlConnection(connectionString))
-            {
-               connection.Execute(query);
+                                                     0); ", new { Interviewer = item.Interviewer, Date = DateTime.Today, ShiftStart = item.ShiftStart, ShiftEnd = item.ShiftEnd, TotalHours = item.TotalHours,Team = item.Team, DateNow = DateTime.Now });
+                }
             }
 
         }
