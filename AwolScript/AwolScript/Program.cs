@@ -14,10 +14,10 @@ namespace AwolScript
     class Program
     {
         //Test Connection String
-       // public static string connectionString = "data source = 192.100.50.14; initial catalog = CC_Data_WMS_LIVE; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
+        public static string connectionString = "data source = 192.100.50.14; initial catalog = CC_Data_WMS_LIVE; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
 
         //Live Connection String
-        public static string connectionString = "data source = BMG-DBEXT01\\BMG_PROD_EXT; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
+       // public static string connectionString = "data source = BMG-DBEXT01\\BMG_PROD_EXT; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
 
 
         static void Main(string[] args)
@@ -54,11 +54,11 @@ namespace AwolScript
 
         private static void HandleAwolRun(List<CC_Scheduling> data)
         {
-            //get range of id's for Awol interviewers and update CCScheduling status to AWOL
-           UpdateCCScheduleStatusToAwol(data.Select( x => x.ID).ToList());
 
             //Create new Entry on CC Scheduling with Awol Status for each Awol Interviewer
             CreateNewAwolEntryInCCSchedulingSickLate(data);
+            //get range of id's for Awol interviewers and update CCScheduling status to AWOL
+            UpdateCCScheduleStatusToAwol(data.Select( x => x.ID).ToList());
 
             //Send report for interviewer Awol
             SendEmailWithReportAwol(data);
@@ -81,12 +81,20 @@ namespace AwolScript
                 if (!String.IsNullOrWhiteSpace(employedBy))
                 {
                     //Selecting multiple emails some agency contains multiple emails
-                  //  List<string> sendToEmails = db.CC_AgencyDetails.Where(x => x.AgencyName.ToLower().Trim() == employedBy).Select(x => x.AgencyAMEmail).ToList();
+                    //  List<string> sendToEmails = db.CC_AgencyDetails.Where(x => x.AgencyName.ToLower().Trim() == employedBy).Select(x => x.AgencyAMEmail).ToList();
+                    string teamLeaderEmail = "";
 
-                    string temLeaderEmail = db.CC_ManagerTeamLink.Where(x => x.Managers == currentInterviewer.TEAM).Select(x => x.Email).FirstOrDefault();
-                    //add manager to notyfication
-                    temLeaderEmail += $"{ConfigurationSettings.AppSettings["ManagerEmail"]}";
+                    teamLeaderEmail = "";// db.CC_ManagerTeamLink.Where(x => x.Managers == currentInterviewer.TEAM).Select(x => x.Email).FirstOrDefault();
 
+                    if (string.IsNullOrWhiteSpace(teamLeaderEmail))
+                    {
+                        teamLeaderEmail += $" {ConfigurationSettings.AppSettings["ManagerEmail"]}";
+                    }
+                    else
+                    {
+                        teamLeaderEmail += $", {ConfigurationSettings.AppSettings["ManagerEmail"]}";
+                    }
+                    
                     // If agency not exist in table, manager and team leader will recive email with details.
                     //if (sendToEmails == null)
                     //{
@@ -107,11 +115,11 @@ namespace AwolScript
                     }
 
 
-                    int totalAwol = db.CC_SchedulingSickLate.SqlQuery("SELECT *, [Shift-Start] as ShiftStart, [Shift-End] as ShiftEnd FROM CC_SchedulingSickLate where status = 'awol' and Interviewer = 'Isba Shaheen (237719)' and Date >= DATEADD(MONTH, -3, GETDATE())").ToList().Count;
+                    int totalAwol = db.CC_SchedulingSickLate.SqlQuery($"SELECT *, [Shift-Start] as ShiftStart, [Shift-End] as ShiftEnd FROM CC_SchedulingSickLate where status = 'awol' and Interviewer = '{item.Interviewer}' and Date >= DATEADD(MONTH, -3, GETDATE())").ToList().Count;
 
                     string subject = $"{PayId} B - AWOL({totalAwol}) - {currentInterviewer.IntNameID}";
                     string body = $"Awol notyfication for {currentInterviewer.IntNameID}, shift start: {item.ShiftStart.ToLongTimeString()} / shift end: {item.ShiftEnd.ToLongTimeString()}";
-                    Helper.SendEmailWithReportToAgency(temLeaderEmail, subject, body);
+                    Helper.SendEmailWithReportToAgency(teamLeaderEmail, subject, body);
 
                 }
 
@@ -124,36 +132,75 @@ namespace AwolScript
         private static void CreateNewAwolEntryInCCSchedulingSickLate(List<CC_Scheduling> data)
         {
 
+
+        
+
+
             DBContext db = new DBContext();
 
-            List<CC_SchedulingSickLate> newRangeToAdd = new List<CC_SchedulingSickLate>();
-
+            // List<CC_SchedulingSickLate> newRangeToAdd = new List<CC_SchedulingSickLate>();
+            string query = "";
             foreach (CC_Scheduling item in data)
             {
 
-                CC_SchedulingSickLate newRecord = new CC_SchedulingSickLate
-                {
-                    Interviewer = item.Interviewer,
-                    Date = DateTime.Today,
-                    ShiftStart = item.ShiftStart,
-                    ShiftEnd = item.ShiftEnd,
-                    Status = "AWOL",
-                    TotalHours = item.TotalHours,
-                    Comments = "Automated AWOL",
-                    Manager = item.Team,
-                    EntryDate = DateTime.Now,
-                    IntSign = false,
-                    ManSign = false,
-                    Approve = false,
-                    Deny = false
-                };
+                 query += $@"INSERT INTO cc_schedulingsicklate 
+                                                    (interviewer,
+                                                     [date],
+                                                     [shift-start],
+                                                     [shift-end],
+                                                     status,
+                                                     totalhours,
+                                                     comments,
+                                                     manager,
+                                                     entrydate,
+                                                     intsign,
+                                                     mansign,
+                                                     approve,
+                                                     [deny])
+                                        VALUES('{item.Interviewer}',
+                                                     '{DateTime.Today}',
+                                                     '{item.ShiftStart}',
+                                                     '{item.ShiftEnd}',
+                                                     'AWOL',
+                                                     {item.TotalHours},
+                                                     'Automated AWOL',
+                                                     '{item.Team}',
+                                                     '{DateTime.Now}',
+                                                     0,
+                                                     0,
+                                                     0,
+                                                     0);";
 
-                newRangeToAdd.Add(newRecord);
+                //CC_SchedulingSickLate newRecord = new CC_SchedulingSickLate
+                //{
+                //    Interviewer = item.Interviewer,
+                //    Date = DateTime.Today,
+                //    ShiftStart = item.ShiftStart,
+                //    ShiftEnd = item.ShiftEnd,
+                //    Status = "AWOL",
+                //    TotalHours = item.TotalHours,
+                //    Comments = "Automated AWOL",
+                //    Manager = item.Team,
+                //    EntryDate = DateTime.Now,
+                //    IntSign = false,
+                //    ManSign = false,
+                //    Approve = false,
+                //    Deny = false
+                //};
+
+
+
+                //newRangeToAdd.Add(newRecord);
             }
 
-            db.CC_SchedulingSickLate.AddRange(newRangeToAdd);
+            using (var connection = new SqlConnection(connectionString))
+            {
+               int resultback = connection.Execute(query);
+            }
 
-            db.SaveChanges();
+            //  db.CC_SchedulingSickLate.AddRange(newRangeToAdd);
+
+            //   db.SaveChanges();
         }
 
         private static string GetIdsRange(List<CC_Scheduling> dataSet)
@@ -178,6 +225,7 @@ namespace AwolScript
         private static List<CC_Scheduling> GetAwolInterviewers()
         {
 
+
             string query = @"SELECT cc_scheduling.* , [Shift-Start] as ShiftStart, [Shift-End] as ShiftEnd, CC_Scheduling.[Autorisated By] as Autorisated_By
                                             FROM   cc_interviewerlist 
                                                    INNER JOIN cc_scheduling 
@@ -190,13 +238,18 @@ namespace AwolScript
                                                    AND CONVERT(TIME, cc_scheduling.[shift-start]) < CONVERT(TIME, Getdate())
                                 ";
 
+            using (var connection = new SqlConnection(connectionString))
+            {
+                List<CC_Scheduling> data = connection.Query<CC_Scheduling>(query).ToList();
 
+                return data;
+            };
 
-            DBContext context = new DBContext();
+          //  DBContext context = new DBContext();
 
-            List<CC_Scheduling> data = context.CC_Scheduling.SqlQuery(query).ToList();
+          //  List<CC_Scheduling> data = context.CC_Scheduling.SqlQuery(query).ToList();
 
-            return data;
+            
         }
 
 
