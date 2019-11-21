@@ -14,11 +14,10 @@ namespace AwolScript
     class Program
     {
         //Test Connection String
-        public static string connectionString = "data source = 192.100.50.14; initial catalog = CC_Data_WMS_LIVE; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
+       // public static string connectionString = "data source = 192.100.50.14; initial catalog = CC_Data_WMS_LIVE; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
 
         //Live Connection String
-       // public static string connectionString = "data source = BMG-DBEXT01\\BMG_PROD_EXT; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
-
+        public static string connectionString = "data source = BMG-DBEXT01\\BMG_PROD_EXT; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
 
         static void Main(string[] args)
         {
@@ -26,7 +25,6 @@ namespace AwolScript
             {
                 //Program will be scheduled to run 2x a day at 11am and 6pm to scan peoples which didn't come in
                 //to work but they have a schedule. Than agency will get notyfication and also internal stuff, user will be marked as awol.
-                int currentHour = DateTime.Now.Hour;
 
                 List<CC_Scheduling> AwolInterviewers = new List<CC_Scheduling>();
 
@@ -59,7 +57,6 @@ namespace AwolScript
             CreateNewAwolEntryInCCSchedulingSickLate(data);
             //get range of id's for Awol interviewers and update CCScheduling status to AWOL
             UpdateCCScheduleStatusToAwol(data.Select( x => x.ID).ToList());
-
             //Send report for interviewer Awol
             SendEmailWithReportAwol(data);
         }
@@ -84,7 +81,7 @@ namespace AwolScript
                     //  List<string> sendToEmails = db.CC_AgencyDetails.Where(x => x.AgencyName.ToLower().Trim() == employedBy).Select(x => x.AgencyAMEmail).ToList();
                     string teamLeaderEmail = "";
 
-                    teamLeaderEmail = "";// db.CC_ManagerTeamLink.Where(x => x.Managers == currentInterviewer.TEAM).Select(x => x.Email).FirstOrDefault();
+                    teamLeaderEmail = db.CC_ManagerTeamLink.Where(x => x.Managers == currentInterviewer.TEAM).Select(x => x.Email).FirstOrDefault();
 
                     if (string.IsNullOrWhiteSpace(teamLeaderEmail))
                     {
@@ -114,7 +111,6 @@ namespace AwolScript
                         PayId = "BMG-";
                     }
 
-
                     int totalAwol = db.CC_SchedulingSickLate.SqlQuery($"SELECT *, [Shift-Start] as ShiftStart, [Shift-End] as ShiftEnd FROM CC_SchedulingSickLate where status = 'awol' and Interviewer = '{item.Interviewer}' and Date >= DATEADD(MONTH, -3, GETDATE())").ToList().Count;
 
                     string subject = $"{PayId} B - AWOL({totalAwol}) - {currentInterviewer.IntNameID}";
@@ -123,8 +119,6 @@ namespace AwolScript
 
                 }
 
-
-
             }
 
         }
@@ -132,13 +126,6 @@ namespace AwolScript
         private static void CreateNewAwolEntryInCCSchedulingSickLate(List<CC_Scheduling> data)
         {
 
-
-        
-
-
-            DBContext db = new DBContext();
-
-            // List<CC_SchedulingSickLate> newRangeToAdd = new List<CC_SchedulingSickLate>();
             string query = "";
             foreach (CC_Scheduling item in data)
             {
@@ -170,47 +157,13 @@ namespace AwolScript
                                                      0,
                                                      0,
                                                      0);";
-
-                //CC_SchedulingSickLate newRecord = new CC_SchedulingSickLate
-                //{
-                //    Interviewer = item.Interviewer,
-                //    Date = DateTime.Today,
-                //    ShiftStart = item.ShiftStart,
-                //    ShiftEnd = item.ShiftEnd,
-                //    Status = "AWOL",
-                //    TotalHours = item.TotalHours,
-                //    Comments = "Automated AWOL",
-                //    Manager = item.Team,
-                //    EntryDate = DateTime.Now,
-                //    IntSign = false,
-                //    ManSign = false,
-                //    Approve = false,
-                //    Deny = false
-                //};
-
-
-
-                //newRangeToAdd.Add(newRecord);
             }
 
             using (var connection = new SqlConnection(connectionString))
             {
-               int resultback = connection.Execute(query);
+               connection.Execute(query);
             }
 
-            //  db.CC_SchedulingSickLate.AddRange(newRangeToAdd);
-
-            //   db.SaveChanges();
-        }
-
-        private static string GetIdsRange(List<CC_Scheduling> dataSet)
-        {
-            //exctract ids from  awol interviewers list
-            List<int> ids = dataSet.Select(x => x.ID).ToList();
-           //prepare ids range for sql query 
-            string idsRange = String.Join(", ", ids);
-
-            return idsRange;
         }
 
         private static void UpdateCCScheduleStatusToAwol(List<int> idsRange)
@@ -224,7 +177,6 @@ namespace AwolScript
 
         private static List<CC_Scheduling> GetAwolInterviewers()
         {
-
 
             string query = @"SELECT cc_scheduling.* , [Shift-Start] as ShiftStart, [Shift-End] as ShiftEnd, CC_Scheduling.[Autorisated By] as Autorisated_By
                                             FROM   cc_interviewerlist 
@@ -244,54 +196,9 @@ namespace AwolScript
 
                 return data;
             };
-
-          //  DBContext context = new DBContext();
-
-          //  List<CC_Scheduling> data = context.CC_Scheduling.SqlQuery(query).ToList();
-
             
         }
 
-
-        private static List<T> ConvertDataTable<T>(DataTable dt)
-        {
-            List<T> data = new List<T>();
-            foreach (DataRow row in dt.Rows)
-            {
-                T item = GetItem<T>(row);
-                data.Add(item);
-            }
-            return data;
-        }
-        private static T GetItem<T>(DataRow dr)
-        {
-            Type temp = typeof(T);
-            T obj = Activator.CreateInstance<T>();
-
-            foreach (DataColumn column in dr.Table.Columns)
-            {
-                foreach (PropertyInfo pro in temp.GetProperties())
-                {
-                    if (pro.Name == column.ColumnName)
-
-                        if (!String.IsNullOrEmpty(dr[column.ColumnName].ToString()))
-                        {
-                            pro.SetValue(obj, dr[column.ColumnName]);
-                        }
-                        else
-                        {
-                            continue;
-                        }
-
-                    else
-                    {
-                        continue;
-                    }
-
-                }
-            }
-            return obj;
-        }
     }
 
 
