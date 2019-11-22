@@ -24,7 +24,7 @@ namespace AwolScript
             try
             {
                 //Program will be scheduled to run 2x a day at 11am and 6pm to scan peoples which didn't come in
-                //to work but they have a schedule. Than agency will get notyfication and also internal stuff, user will be marked as awol.
+                //to work but they have a schedule. Than agency will get notification and also internal stuff, user will be marked as awol.
 
                 List<CC_Scheduling> AwolInterviewers = new List<CC_Scheduling>();
 
@@ -106,12 +106,12 @@ namespace AwolScript
                     //if (sendToEmails == null)
                     //{
                     //    string subject = $"Awol, {currentInterviewer.IntNameID}";
-                    //    string body = $"Awol notyfication for {currentInterviewer.IntNameID} were not send to agency as agency name were not found employedBy value: {employedBy}";
+                    //    string body = $"Awol notification for {currentInterviewer.IntNameID} were not send to agency as agency name were not found employedBy value: {employedBy}";
                     //    Helper.SendEmail(temLeaderEmail, subject, body);                     
                     //}
 
                     //string agencyEmails = String.Join(", ", sendToEmails.ToArray());
-                    ////Append team leaders and manager for notyfications
+                    ////Append team leaders and manager for notifications
                     //agencyEmails += $", {temLeaderEmail}";
 
                     string PayId = "";
@@ -135,7 +135,7 @@ namespace AwolScript
                     }
 
                     string subject = $"{PayId} B - AWOL({totalAwol}) - {currentInterviewer.IntNameID}";
-                    string body = $"Awol notyfication for {currentInterviewer.IntNameID}, shift start: {item.ShiftStart.ToLongTimeString()} / shift end: {item.ShiftEnd.ToLongTimeString()}";
+                    string body = $"Awol notification for {currentInterviewer.IntNameID}, shift start: {item.ShiftStart.ToLongTimeString()} / shift end: {item.ShiftEnd.ToLongTimeString()}";
                     Helper.SendEmailWithReportToAgency(teamLeaderEmail, subject, body);
 
                 }
