@@ -23,6 +23,8 @@ namespace AwolScript
         {
             try
             {
+
+                Helper.SendEmail("mateusz.stacel@bmgresearch.co.uk, Mokbul.Miah@bmgresearch.co.uk", "Awol Script Started", DateTime.Now.ToLocalTime().ToString() );
                 //Program will be scheduled to run 2x a day at 11am and 6pm to scan peoples which didn't come in
                 //to work but they have a schedule. Than agency will get notification and also internal stuff, user will be marked as awol.
 
@@ -40,6 +42,8 @@ namespace AwolScript
                 {
                     Helper.SendEmail("mateusz.stacel@bmgresearch.co.uk, Mokbul.Miah@bmgresearch.co.uk", "Awol run", $"No awol interviewers at {DateTime.Now} ");
                 }
+
+                Helper.SendEmail("mateusz.stacel@bmgresearch.co.uk, Mokbul.Miah@bmgresearch.co.uk", "Awol Script Finished", DateTime.Now.ToLocalTime().ToString());
             }
             catch (Exception e)
             {
@@ -198,16 +202,19 @@ namespace AwolScript
         {
 
             string query = @"SELECT cc_scheduling.* , [Shift-Start] as ShiftStart, [Shift-End] as ShiftEnd, CC_Scheduling.[Autorisated By] as Autorisated_By
+
                                             FROM   cc_interviewerlist 
                                                    INNER JOIN cc_scheduling 
                                                            ON cc_scheduling.interviewer = cc_interviewerlist.intnameid 
+														   LEFT outer JOIN Master_Activity on Master_Activity.IntName = CC_InterviewerList.IntNameID
+														   and Master_Activity.Date = CC_Scheduling.Date
                                             WHERE  cc_interviewerlist.live = 1 
                                                    AND cc_scheduling.status = 'core' 
                                                    AND cc_scheduling.approved = 1 
                                                    AND cc_scheduling.[in] = 0 
                                                    AND Cast(cc_scheduling.date AS DATE) = Cast(Getdate() AS DATE) 
                                                    AND CONVERT(TIME, cc_scheduling.[shift-start]) < CONVERT(TIME, Getdate())
-                                ";
+												   and Master_Activity.Date is null";
 
             using (var connection = new SqlConnection(connectionString))
             {
