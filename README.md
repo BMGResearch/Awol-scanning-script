@@ -1,5 +1,4 @@
 
-```
 # Awol-scanning-script
 > Direct resolution for https://trello.com/c/W7bh3Uq4
 
@@ -68,4 +67,4 @@ List of key contacts that are aware of the context of the project.
 | ------------- |:-------------:|
 | 15/11/2019      | Initial project started
 | 21/11/2019      | project is running in test mode it mean that only internal stuff will get email notification (Resource manager, and interviewer team leader).
-```
+
