@@ -13,7 +13,7 @@ namespace AwolScript
 
         public static void SendEmail(string email, string subject, string body)
         {
-            MailMessage mail = new MailMessage("noreply@AutomatedAwol", email);
+            MailMessage mail = new MailMessage("noreply@AutomatedAwol.com", email);
             SmtpClient client = new SmtpClient("172.16.0.43");
             client.Port = 25;
             client.UseDefaultCredentials = false;
@@ -33,7 +33,7 @@ namespace AwolScript
 
         public static void SendEmailWithReportToAgency(string email, string subject, string body)
         {
-            MailMessage mail = new MailMessage("noreply@AutomatedAwol", email);
+            MailMessage mail = new MailMessage("noreply@AutomatedAwol.com", email);
             SmtpClient client = new SmtpClient("172.16.0.43");
             client.Port = 25;
             client.UseDefaultCredentials = false;

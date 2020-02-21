@@ -24,7 +24,7 @@ namespace AwolScript
             try
             {
 
-                Helper.SendEmail("mateusz.stacel@bmgresearch.co.uk, Mokbul.Miah@bmgresearch.co.uk", "Awol Script Started", DateTime.Now.ToLocalTime().ToString() );
+                Helper.SendEmail("mateusz.stacel@bmgresearch.com", "Awol Script Started", DateTime.Now.ToLocalTime().ToString() );
                 //Program will be scheduled to run 2x a day at 11am and 6pm to scan peoples which didn't come in
                 //to work but they have a schedule. Than agency will get notification and also internal stuff, user will be marked as awol.
 
@@ -40,14 +40,14 @@ namespace AwolScript
                 }
                 else
                 {
-                    Helper.SendEmail("mateusz.stacel@bmgresearch.co.uk, Mokbul.Miah@bmgresearch.co.uk", "Awol run", $"No awol interviewers at {DateTime.Now} ");
+                    Helper.SendEmail("mateusz.stacel@bmgresearch.com", "Awol run", $"No awol interviewers at {DateTime.Now} ");
                 }
 
-                Helper.SendEmail("mateusz.stacel@bmgresearch.co.uk, Mokbul.Miah@bmgresearch.co.uk", "Awol Script Finished", DateTime.Now.ToLocalTime().ToString());
+                Helper.SendEmail("mateusz.stacel@bmgresearch.com", "Awol Script Finished", DateTime.Now.ToLocalTime().ToString());
             }
             catch (Exception e)
             {
-                Helper.SendEmail("mateusz.stacel@bmgresearch.co.uk, Mokbul.Miah@bmgresearch.co.uk", "Awol error", $" {e.ToString()} ");
+                Helper.SendEmail("mateusz.stacel@bmgresearch.com, Mokbul.Miah@bmgresearch.com", "Awol error", $" {e.ToString()} ");
             }
 
                   
@@ -171,14 +171,14 @@ namespace AwolScript
                                                      mansign,
                                                      approve,
                                                      [deny])
-                                        VALUES('@Interviewer',
+                                        VALUES(@Interviewer,
                                                      @Date,
                                                      @ShiftStart,
                                                      @ShiftEnd,
                                                      'AWOL',
                                                      @TotalHours,
                                                      'Automated AWOL',
-                                                     '@Team',
+                                                     @Team,
                                                      @DateNow,
                                                      0,
                                                      0,
