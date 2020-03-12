@@ -144,7 +144,6 @@ namespace AwolScript
                     }
 
                     string subject = $"{PayId} B - AWOL({totalAwol}) - {currentInterviewer.IntNameID}";
-                    string body = $"Awol notification for {currentInterviewer.IntNameID}, shift start: {item.ShiftStart.ToLongTimeString()} / shift end: {item.ShiftEnd.ToLongTimeString()}";
 
                     FileInfo fi = new FileInfo(System.Reflection.Assembly.GetEntryAssembly().Location);
 
@@ -160,7 +159,7 @@ namespace AwolScript
                 
                     });
 
-                    Helper.SendEmailWithReportToAgency(teamLeaderEmail, subject, body);
+                    Helper.SendEmailWithReportToAgency(teamLeaderEmail, subject, formatedTemplate);
 
                 }
 
