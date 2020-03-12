@@ -76,5 +76,8 @@
       <Version>4.6.0</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="EmailsTemplates\AwolTemplate.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

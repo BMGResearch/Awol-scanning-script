@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -14,10 +16,10 @@ namespace AwolScript
     class Program
     {
         //Test Connection String
-        //public static string connectionString = "data source = 192.100.50.14; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
+        public static string connectionString = "data source = 192.100.50.14; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
 
         //Live Connection String
-        public static string connectionString = "data source = BMG-DBEXT01\\BMG_PROD_EXT; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
+        //public static string connectionString = "data source = BMG-DBEXT01\\BMG_PROD_EXT; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
 
         static void Main(string[] args)
         {
@@ -143,12 +145,35 @@ namespace AwolScript
 
                     string subject = $"{PayId} B - AWOL({totalAwol}) - {currentInterviewer.IntNameID}";
                     string body = $"Awol notification for {currentInterviewer.IntNameID}, shift start: {item.ShiftStart.ToLongTimeString()} / shift end: {item.ShiftEnd.ToLongTimeString()}";
+
+                    FileInfo fi = new FileInfo(System.Reflection.Assembly.GetEntryAssembly().Location);
+
+                    var xsdf = 1;
+
+                    string templatePath = Path.Combine(fi.Directory.ToString(), "EmailsTemplates\\AwolTemplate.txt");
+                    string emailTemplate = System.IO.File.ReadAllText(templatePath);
+                    string formatedTemplate = Format(emailTemplate, new
+                    {
+                     Interviewer = currentInterviewer.IntNameID,
+                        shiftStart = item.ShiftStart.ToLongTimeString(),
+                        ShiftEnd =  item.ShiftEnd.ToLongTimeString()
+                
+                    });
+
                     Helper.SendEmailWithReportToAgency(teamLeaderEmail, subject, body);
 
                 }
 
             }
 
+        }
+
+        public static string Format(string input, object p)
+        {
+            foreach (PropertyDescriptor prop in TypeDescriptor.GetProperties(p))
+                input = input.Replace("{" + prop.Name + "}", (prop.GetValue(p) ?? "N/A").ToString());
+
+            return input;
         }
 
         private static void CreateNewAwolEntryInCCSchedulingSickLate(List<CC_Scheduling> data)
