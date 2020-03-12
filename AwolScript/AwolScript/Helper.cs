@@ -13,41 +13,21 @@ namespace AwolScript
 
         public static void SendEmail(string email, string subject, string body)
         {
-            MailMessage mail = new MailMessage("noreply@AutomatedAwol.com", email);
-            SmtpClient client = new SmtpClient("172.16.0.43");
-            client.Port = 25;
-            client.UseDefaultCredentials = false;
-            client.EnableSsl = false;
-            client.Credentials = new NetworkCredential("", "");
-            //mail.To.Add("add more peoples...");
-            mail.Subject = subject;
-            mail.IsBodyHtml = false;
 
+            BMGServices.Email.EmailHelper emailHelper = new BMGServices.Email.EmailHelper("Awol Script");
 
-            mail.Body = body;
-
-
-            client.Send(mail);
+            List<string> emailsTo = email.Split(',').ToList();
+            emailHelper.SendEmail(subject, body, emailsTo);
         }
 
 
         public static void SendEmailWithReportToAgency(string email, string subject, string body)
         {
-            MailMessage mail = new MailMessage("noreply@AutomatedAwol.com", email);
-            SmtpClient client = new SmtpClient("172.16.0.43");
-            client.Port = 25;
-            client.UseDefaultCredentials = false;
-            client.EnableSsl = false;
-            client.Credentials = new NetworkCredential("", "");
-            //mail.To.Add("add more peoples...");
-            mail.Subject = subject;
-            mail.IsBodyHtml = false;
 
+            BMGServices.Email.EmailHelper emailHelper = new BMGServices.Email.EmailHelper("Awol Script");
 
-            mail.Body = body;
-
-
-            client.Send(mail);
+            List<string> emailsTo = email.Split(',').ToList();
+            emailHelper.SendEmail(subject, body, emailsTo);
         }
 
 

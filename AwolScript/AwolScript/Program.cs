@@ -14,7 +14,7 @@ namespace AwolScript
     class Program
     {
         //Test Connection String
-        //public static string connectionString = "data source = 192.100.50.14; initial catalog = CC_Data_WMS_LIVE; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
+        //public static string connectionString = "data source = 192.100.50.14; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
 
         //Live Connection String
         public static string connectionString = "data source = BMG-DBEXT01\\BMG_PROD_EXT; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
@@ -47,6 +47,9 @@ namespace AwolScript
             }
             catch (Exception e)
             {
+                BMGServices.Errors.ErrorHandler errorHandler = new BMGServices.Errors.ErrorHandler("AWOL SCRIPT");
+
+                errorHandler.LogError(e.ToString(),BMGServices.Errors.ErrorHandler.Severity.Medium,BMGServices.Errors.ErrorHandler.IPLocation.Server, null);
                 Helper.SendEmail("mateusz.stacel@bmgresearch.com, Mokbul.Miah@bmgresearch.com", "Awol error", $" {e.ToString()} ");
             }
 
