@@ -98,7 +98,16 @@ namespace AwolScript
                     using (var connection = new SqlConnection(connectionString))
                     {
                         CC_ManagerTeamLink interviewerManager = connection.Query<CC_ManagerTeamLink>(@"SELECT * from CC_ManagerTeamLink where Managers = @InterviewerManager", new { InterviewerManager = currentInterviewer.TEAM }).FirstOrDefault();
-                        teamLeaderEmail = interviewerManager.Email;
+                       
+                        if(interviewerManager == null)
+                        {
+                            teamLeaderEmail = "";
+                        } else
+                        {
+                            teamLeaderEmail = interviewerManager.Email;
+                        }
+                        
+                     
                     }
 
 
