@@ -92,7 +92,7 @@ namespace AwolScript
                 if (!String.IsNullOrWhiteSpace(employedBy))
                 {
                     //Selecting multiple emails some agency contains multiple emails
-                    //  List<string> sendToEmails = db.CC_AgencyDetails.Where(x => x.AgencyName.ToLower().Trim() == employedBy).Select(x => x.AgencyAMEmail).ToList();
+                    List<string> sendToEmails = db.CC_AgencyDetails.Where(x => x.AgencyName.ToLower().Trim() == employedBy).Select(x => x.AgencyAMEmail).ToList();
                     string teamLeaderEmail = "";
 
                     using (var connection = new SqlConnection(connectionString))
@@ -121,16 +121,16 @@ namespace AwolScript
                     }
                     
                     // If agency not exist in table, manager and team leader will recive email with details.
-                    //if (sendToEmails == null)
-                    //{
-                    //    string subject = $"Awol, {currentInterviewer.IntNameID}";
-                    //    string body = $"Awol notification for {currentInterviewer.IntNameID} were not send to agency as agency name were not found employedBy value: {employedBy}";
-                    //    Helper.SendEmail(temLeaderEmail, subject, body);                     
-                    //}
+                    if (sendToEmails == null)
+                    {
+                        string sub = $"Awol, {currentInterviewer.IntNameID}";
+                        string body = $"Awol notification for {currentInterviewer.IntNameID} were not send to agency as agency name were not found employedBy value: {employedBy}";
+                        Helper.SendEmail(teamLeaderEmail, sub, body);                     
+                    }
 
-                    //string agencyEmails = String.Join(", ", sendToEmails.ToArray());
+                    string agencyEmails = String.Join(", ", sendToEmails.ToArray());
                     ////Append team leaders and manager for notifications
-                    //agencyEmails += $", {temLeaderEmail}";
+                    agencyEmails += $", {teamLeaderEmail}";
 
                     string PayId = "";
 
