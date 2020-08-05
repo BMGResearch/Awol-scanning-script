@@ -17,7 +17,8 @@ namespace AwolScript
             BMGServices.Email.EmailHelper emailHelper = new BMGServices.Email.EmailHelper("Awol Script");
 
             List<string> emailsTo = email.Split(',').ToList();
-            emailHelper.SendEmail(subject, body, emailsTo);
+            emailHelper.SendStandardBMGEmail(subject, body, emailsTo);
+
         }
 
 
@@ -27,7 +28,7 @@ namespace AwolScript
             BMGServices.Email.EmailHelper emailHelper = new BMGServices.Email.EmailHelper("Awol Script");
 
             List<string> emailsTo = email.Split(',').ToList();
-            emailHelper.SendEmail(subject, body, emailsTo);
+            emailHelper.SendStandardBMGEmail(subject, body, emailsTo);
         }
 
 
