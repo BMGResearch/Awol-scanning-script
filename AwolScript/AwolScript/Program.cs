@@ -121,11 +121,12 @@ namespace AwolScript
                     }
                     
                     // If agency not exist in table, manager and team leader will recive email with details.
-                    if (sendToEmails == null)
+                    if (sendToEmails.Count < 1)
                     {
                         string sub = $"Awol, {currentInterviewer.IntNameID}";
                         string body = $"Awol notification for {currentInterviewer.IntNameID} were not send to agency as agency name were not found employedBy value: {employedBy}";
-                        Helper.SendEmail(teamLeaderEmail, sub, body);                     
+                        Helper.SendEmail(teamLeaderEmail, sub, body);
+                        return;
                     }
 
                     string agencyEmails = String.Join(", ", sendToEmails.ToArray());
