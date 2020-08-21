@@ -91,11 +91,15 @@ namespace AwolScript
                 if (!String.IsNullOrWhiteSpace(employedBy))
                 {
                     //Selecting multiple emails some agency contains multiple emails
-                    List<string> sendToEmails = db.CC_AgencyDetails.Where(x => x.AgencyName.ToLower().Trim() == employedBy).Select(x => x.AgencyAMEmail).ToList();
+                    List<string> sendToEmails = new List<string>();
+                    //db.CC_AgencyDetails.Where(x => x.AgencyName.ToLower().Trim() == employedBy).Select(x => x.AgencyAMEmail).ToList();
                     string teamLeaderEmail = "";
 
                     using (var connection = new SqlConnection(connectionString))
                     {
+                        sendToEmails = connection.Query<string>("select AgencyAMEmail from CC_AgencyDetails where AgencyName = @employedBy", new { employedBy }).ToList();
+
+
                         CC_ManagerTeamLink interviewerManager = connection.Query<CC_ManagerTeamLink>(@"SELECT * from CC_ManagerTeamLink where Managers = @InterviewerManager", new { InterviewerManager = currentInterviewer.TEAM }).FirstOrDefault();
                        
                         if(interviewerManager == null)
