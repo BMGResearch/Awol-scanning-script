@@ -15,8 +15,10 @@ namespace AwolScript
 {
     class Program
     {
+
+       
         //Test Connection String
-        //public static string connectionString = "data source = 192.100.50.14; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
+       // public static string connectionString = "data source = 192.100.50.14; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
 
         //Live Connection String
         public static string connectionString = "data source = BMG-DBEXT01\\BMG_PROD_EXT; initial catalog = CC_Data; user id = BMG_WMS; password=E_cKyS*B4.!JrJW<;MultipleActiveResultSets=True;";
@@ -120,15 +122,18 @@ namespace AwolScript
                     // If agency not exist in table, manager and team leader will recive email with details.
                     if (sendToEmails.Count < 1)
                     {
-                        string sub = $"Awol, {currentInterviewer.IntNameID}";
-                        string body = $"Awol notification for {currentInterviewer.IntNameID} were not send to agency as agency name were not found employedBy value: {employedBy}";
+                        string sub = $"Agency Email missing for {currentInterviewer.IntNameID}";
+                        string body = $"Awol notification for {currentInterviewer.IntNameID} could not be sent to agency,  as details were not found for {employedBy}";
                         Helper.SendEmail(teamLeaderEmail, sub, body);
-                        return;
+                       // return;
                     }
 
+                    sendToEmails.Add(teamLeaderEmail);
+
                     string agencyEmails = String.Join(", ", sendToEmails.ToArray());
+                
                     ////Append team leaders and manager for notifications
-                    agencyEmails += $", {teamLeaderEmail}";
+                    //agencyEmails += $", {teamLeaderEmail}";
 
                     string PayId = "";
 

@@ -7,12 +7,7 @@ namespace AwolScript
 
     public partial class DBContext : DbContext
     {
-        public DBContext()
-            : base("name=DbContext")
-        {
-        }
-
-
+     
         public virtual DbSet<CC_AgencyDetails> CC_AgencyDetails { get; set; }
 
         public virtual DbSet<CC_InterviewerList> CC_InterviewerList { get; set; }
