@@ -26,7 +26,7 @@ namespace AwolScript
             try
             {
 
-                Helper.SendEmail("mateusz.stacel@bmgresearch.com", "Awol Script Started", DateTime.Now.ToLocalTime().ToString() );
+
                 //Program will be scheduled to run 2x a day at 11am and 6pm to scan peoples which didn't come in
                 //to work but they have a schedule. Than agency will get notification and also internal stuff, user will be marked as awol.
 
@@ -40,12 +40,9 @@ namespace AwolScript
                 {
                     HandleAwolRun(AwolInterviewers);
                 }
-                else
-                {
-                    Helper.SendEmail("mateusz.stacel@bmgresearch.com", "Awol run", $"No awol interviewers at {DateTime.Now} ");
-                }
+           
 
-                Helper.SendEmail("mateusz.stacel@bmgresearch.com", "Awol Script Finished", DateTime.Now.ToLocalTime().ToString());
+              
             }
             catch (Exception e)
             {
@@ -92,7 +89,7 @@ namespace AwolScript
                 if (!String.IsNullOrWhiteSpace(employedBy))
                 {
                     //Selecting multiple emails some agency contains multiple emails
-                    //  List<string> sendToEmails = db.CC_AgencyDetails.Where(x => x.AgencyName.ToLower().Trim() == employedBy).Select(x => x.AgencyAMEmail).ToList();
+                    List<string> sendToEmails = db.CC_AgencyDetails.Where(x => x.AgencyName.ToLower().Trim() == employedBy).Select(x => x.AgencyAMEmail).ToList();
                     string teamLeaderEmail = "";
 
                     using (var connection = new SqlConnection(connectionString))
@@ -121,16 +118,17 @@ namespace AwolScript
                     }
                     
                     // If agency not exist in table, manager and team leader will recive email with details.
-                    //if (sendToEmails == null)
-                    //{
-                    //    string subject = $"Awol, {currentInterviewer.IntNameID}";
-                    //    string body = $"Awol notification for {currentInterviewer.IntNameID} were not send to agency as agency name were not found employedBy value: {employedBy}";
-                    //    Helper.SendEmail(temLeaderEmail, subject, body);                     
-                    //}
+                    if (sendToEmails.Count < 1)
+                    {
+                        string sub = $"Awol, {currentInterviewer.IntNameID}";
+                        string body = $"Awol notification for {currentInterviewer.IntNameID} were not send to agency as agency name were not found employedBy value: {employedBy}";
+                        Helper.SendEmail(teamLeaderEmail, sub, body);
+                        return;
+                    }
 
-                    //string agencyEmails = String.Join(", ", sendToEmails.ToArray());
+                    string agencyEmails = String.Join(", ", sendToEmails.ToArray());
                     ////Append team leaders and manager for notifications
-                    //agencyEmails += $", {temLeaderEmail}";
+                    agencyEmails += $", {teamLeaderEmail}";
 
                     string PayId = "";
 
